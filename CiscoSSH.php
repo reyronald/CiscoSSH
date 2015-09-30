@@ -11,6 +11,7 @@
 * Ronald Rey Lovera
 * reyronald@gmail.com
 * September, 2015
+* https://github.com/reyronald/CiscoSSH
 */
 
 abstract class CiscoSSH
@@ -70,6 +71,7 @@ abstract class CiscoSSH
 		preg_match('/(.*)(#|>)/', $entry_string, $manager_hostname_matches);
 		$manager_hostname = isset($manager_hostname_matches[1]) ? $manager_hostname_matches[1] : null;
 
+
 		// Connecting to NE by typing "telnet|ssh IP_ADDRESS"
 		$ssh->write("{$node->line} {$node->ip_address}\n");
 
@@ -119,12 +121,14 @@ abstract class CiscoSSH
 			$commands = [ $commands ];
 
 		$escaped_hostname = str_replace("/", "\/", $hostname);
+		$escaped_hostname = str_replace("-", "\-", $escaped_hostname);
 		$escaped_manager_hostname = str_replace("/", "\/", $manager_hostname);
+		$escaped_manager_hostname = str_replace("-", "\-", $escaped_manager_hostname);
 		$endingDelimeters = [
-			"\nend\r\n",
-			"\bend\r\n",
-			"$escaped_hostname([\w()\-]*)#|>",
-			"$escaped_manager_hostname([\w()\-]*)#|>"
+			// "\nend\r\n",
+			// "\bend\r\n",
+			"$escaped_hostname([\w()\-]*)(#|>)",
+			"$escaped_manager_hostname([\w()\-]*)(#|>)"
 		];
 		foreach ($commands as $command) {
 			$ssh->write( $command . "\n");
@@ -139,7 +143,8 @@ abstract class CiscoSSH
 				if ( preg_match("/" . implode("|", $endingDelimeters) . "/", $section) )
 					break;
 			}
-			$ssh->read("/(#|>)/", NET_SSH2_READ_REGEX);
+
+			// $ssh->read("/(#|>)/", NET_SSH2_READ_REGEX);
 		}
 		// Exiting out of this NE, to continue with another one
 		// in our next iteration of this loop
